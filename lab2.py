@@ -1,20 +1,21 @@
 import time
 from math import gcd
+import random
 
 time_limit = 5*60  # 5 хвилин
 
-def discrete_logarithm(base, target, modulus):
+def discrete_logarithm(a, b, n):
     result = 1
     time_limit = 5*60 # 5 хвилин
     start_time = time.time()
-    for i in range(modulus):
+    for i in range(n):
         while True:
             current_time = time.time()
             elapsed_time = current_time - start_time
             if elapsed_time > time_limit:
                 return -2
-            result = (result * base) % modulus
-            if result == target:
+            result = (result * a) % n
+            if result == b:
                 return i + 1  # Знайдено дискретний логарифм
     return -1  # Дискретний логарифм не знайдено
 
@@ -132,9 +133,41 @@ def silver_polig_hellman(a, b, n):
     x%=n
     return x
 
-a = int(input("Введіть a: "))
-b = int(input("Введіть b: "))
-n = int(input("Введіть n: "))
+# a = int(input("Введіть a: "))
+# b = int(input("Введіть b: "))
+# n = int(input("Введіть n: "))
 
-table = silver_polig_hellman(a, b, n)
-print(table)
+def generate_random_numbers():
+    a = random.randint(1, 100000)
+    b = random.randint(1, 100000)
+    n = random.randint(1, 10000000000000000)
+    return a, b, n
+
+a=2
+b=228
+n=383
+
+# a, b, n = generate_random_numbers()
+
+start_time = time.time()
+result = silver_polig_hellman(a, b, n)
+end_time = time.time()
+execution_time = end_time - start_time
+print("silver_polig_hellman:")
+print("a =", a)
+print("b =", b)
+print("n =", n)
+print("Result:", result)
+print("Execution time:", execution_time, "seconds")
+
+    # Тестування функції discrete_logarithm
+start_time = time.time()
+result = discrete_logarithm(a, b, n)
+end_time = time.time()
+execution_time = end_time - start_time
+print("discrete_logarithm:")
+print("a =", a)
+print("b =", b)
+print("n =", n)
+print("Result:", result)
+print("Execution time:", execution_time, "seconds")
