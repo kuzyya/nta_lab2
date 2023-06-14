@@ -4,32 +4,36 @@ import random
 
 time_limit = 5*60  # 5 хвилин
 
+
 def discrete_logarithm(a, b, n):
     result = 1
-    time_limit = 5*60 # 5 хвилин
+    time_limit = 5*60  # 5 хвилин
     start_time = time.time()
-    for i in range(n):
-        while True:
-            current_time = time.time()
-            elapsed_time = current_time - start_time
-            if elapsed_time > time_limit:
-                return -2
-            result = (result * a) % n
-            if result == b:
-                return i + 1  # Знайдено дискретний логарифм
-    return -1  # Дискретний логарифм не знайдено
+    x=1
+    for i in range(1,n):
+        current_time = time.time()
+        elapsed_time = current_time - start_time
+        if elapsed_time > time_limit:
+            return -2
+        x*=a
+        x=x%n
+        if(x==b):
+            return i
+    return -1  # Неможливо знайти дискретний логарифм
+
+
 
 # Звичайне логарифмування з обеженням 5 хв
-# base = 2
-# target = 8
-# modulus = 13
-# result = discrete_logarithm(base, target, modulus)
+# a = 1920
+# b = 1746
+# p = 2473
+# result = discrete_logarithm(a, b, p)
 # if result == -1:
 #     print("Дискретний логарифм не знайдено")
 # elif result ==-2:
 #     print("Time out")
 # else:
-#     print(f"Дискретний логарифм числа {target} по основі {base} у модулі {modulus} дорівнює {result}")
+#     print(f"Дискретний логарифм числа {a} по основі {b} у модулі {p} дорівнює {result}")
 
 def canonical_factorization(n):
     factors = []
@@ -58,15 +62,44 @@ def full_gcd(a, b):
     return gcd, x, y
 
 def inverse(a, mod):
+    mod+=1
     gcd, x, y = full_gcd(a, mod)
-    if gcd == 1:
-        return x % mod
-    else:
+    if gcd != 1:
         print("no inverse")
         return 0
+    a_1 = x % mod
+    #print(str(a) + "^-1 mod " + str(mod) + " = " + str(a_1))
+    return a_1
+
+#x = x0 + x1pi + . . . + xl−1p
+def calc_x_value(a_inv, b, n, p, table_row, X, k):
+    for i in range(len(X)):
+        b = (b * pow(a_inv, X[i] * pow(p, i, n), n)) % n
+    b = pow(b, n // (p ** (k + 1)), n)
+    for i in range(len(table_row)):
+        if b == table_row[i]:
+            return i
+
+def solve_sys_congr(x_values, mod):
+    x = 0
+    M = []
+    i = 0
+    for a, m in x_values:
+        mi = mod // m
+        gcd, u, v = full_gcd(mi, m)
+        if gcd != 1:
+            print("no inverse")
+            return 0
+        mi_inv = u % m
+        x = (x + a * mi * mi_inv) % mod
+        M.append((mi, mi_inv))
+        i += 1
+    return x
 
 def silver_polig_hellman(a, b, n):
+    n-=1
     factor_counts = canonical_factorization(n)
+    #print(factor_counts)
     table = {}
 
     for prime, count in factor_counts.items():
@@ -78,76 +111,31 @@ def silver_polig_hellman(a, b, n):
             r_values.append(r)
         table[prime] = r_values
 
-    x_values={}
-    
-    for prime, r_values in table.items():
+    #print(table)
 
-        #find x_0
-        find_right=(b**(n//prime))%(n+1)
-        x_values.setdefault(prime, [])
-
-        if find_right in r_values:
-            x_values[prime].append(r_values.index(find_right))
-
-
-        power=0
-
-        for i in range(factor_counts[prime]):
-
-            power+=(x_values[prime][i]*(prime**(i)))
-
-            find_right = ((b*(inverse(a,n+1)**power))**(n//(prime**(i+2))))%(n+1)
-
-            if find_right in r_values:
-                x_values[prime].append(r_values.index(find_right))
-
-
-    x_sum_value=[]
-    for p,x in x_values.items():
-        x=0
-        for i in range(len(x_values[p])):
-            x+=x_values[p][i]*(p**i)
-        x_sum_value.append(x)
-
-    mod_values=[]
-    for prime, count in factor_counts.items():
-        mod_values.append(prime**count)
-
-    if len(x_sum_value) != len(mod_values):
-        print("error1")
-        return 0
-    
-    m=len(x_sum_value)
-    for i in range(m-1):
-        for j in range(i+1,m):
-            if gcd(x_sum_value[i], mod_values[j])!=1:
-                print("Error2")
-                return 0
-    x=0
-    for i in range(m):
-        m_i=mod_values[i]
-        n_i=n//m_i
-        xi = inverse(n_i, m_i)
-        x += x_sum_value[i] * xi * n_i
-
-    x%=n
+#шукаємо х для подальшого розв'язку системи  (х та pl)
+    x_values = []
+    a_inv=inverse(a,n)
+    for p in factor_counts:
+        X = []
+        x = 0
+        l = factor_counts[p]
+        pl = p ** l
+        for i in range(l):
+            xi = calc_x_value(a_inv, b, n+1, p, table[p], X, i)
+            X.append(xi)
+            x = (x + xi * p ** i) % pl
+        x_values.append((x, pl))
+    x = solve_sys_congr(x_values, n )
     return x
 
-# a = int(input("Введіть a: "))
-# b = int(input("Введіть b: "))
-# n = int(input("Введіть n: "))
+a = int(input("Введіть a: "))
+b = int(input("Введіть b: "))
+n = int(input("Введіть n: "))
 
-def generate_random_numbers():
-    a = random.randint(1, 100000)
-    b = random.randint(1, 100000)
-    n = random.randint(1, 10000000000000000)
-    return a, b, n
-
-a=2
-b=228
-n=383
-
-# a, b, n = generate_random_numbers()
+# a = 1920
+# b = 1746
+# n = 2473
 
 start_time = time.time()
 result = silver_polig_hellman(a, b, n)
@@ -165,7 +153,7 @@ start_time = time.time()
 result = discrete_logarithm(a, b, n)
 end_time = time.time()
 execution_time = end_time - start_time
-print("discrete_logarithm:")
+print("discrete_log3arithm:")
 print("a =", a)
 print("b =", b)
 print("n =", n)
