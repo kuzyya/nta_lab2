@@ -129,13 +129,13 @@ def silver_polig_hellman(a, b, n):
     x = solve_sys_congr(x_values, n )
     return x
 
-a = int(input("Введіть a: "))
-b = int(input("Введіть b: "))
-n = int(input("Введіть n: "))
+# a = int(input("Введіть a: "))
+# b = int(input("Введіть b: "))
+# n = int(input("Введіть n: "))
 
-# a = 1920
-# b = 1746
-# n = 2473
+a = 691
+b = 4757
+n = 34583
 
 start_time = time.time()
 result = silver_polig_hellman(a, b, n)
@@ -146,7 +146,7 @@ print("a =", a)
 print("b =", b)
 print("n =", n)
 print("Result:", result)
-print("Execution time:", execution_time, "seconds")
+print("time:", execution_time, "s")
 
     # Тестування функції discrete_logarithm
 start_time = time.time()
@@ -158,4 +158,4 @@ print("a =", a)
 print("b =", b)
 print("n =", n)
 print("Result:", result)
-print("Execution time:", execution_time, "seconds")
+print("time:", execution_time, "s")
